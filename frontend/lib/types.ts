@@ -1,3 +1,13 @@
+export type Role = 'super_admin' | 'client_admin' | 'user';
+
+export type AppUser = {
+  id: string;
+  email: string;
+  name?: string;
+  role: Role;
+  assignedClients: string[];
+};
+
 export type TimeWindow = {
   start: string;
   end: string;

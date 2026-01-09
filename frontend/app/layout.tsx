@@ -1,5 +1,6 @@
 import './globals.css';
 import type { ReactNode } from 'react';
+import { SessionProvider } from '../components/SessionProvider';
 
 export const metadata = {
   title: 'Retell Functions Admin',
@@ -10,7 +11,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body className="bg-gray-50 text-gray-900">
-        <main className="max-w-4xl mx-auto p-6">{children}</main>
+        <SessionProvider>
+          <main className="max-w-5xl mx-auto p-6">{children}</main>
+        </SessionProvider>
       </body>
     </html>
   );
