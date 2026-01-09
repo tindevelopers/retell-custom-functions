@@ -1,3 +1,24 @@
+## Retell Custom Functions Monorepo
+
+This is a Turborepo monorepo containing the admin frontend and multiple custom function backends.
+
+### Structure
+- `apps/frontend`: Next.js admin UI
+- `apps/backend`: Transfer out-of-hours Cloud Run backend
+- `packages/*`: (future) shared packages for types, UI, and tooling
+- `docs/`: Documentation and templates (future)
+
+### Scripts
+- `turbo dev` – run dev tasks in parallel
+- `turbo build` – build all apps
+- `turbo lint` – lint all apps
+
+### Workspace
+Defined via `pnpm-workspace.yaml` and `turbo.json` for task orchestration.
+
+### Notes
+- Environment variables remain app-specific under `apps/frontend` and `apps/backend`.
+- Seed script lives under `apps/frontend/scripts/seed.js`.
 # Retell Custom Functions (TS + Cloud Run + Vercel)
 
 This repository contains:
