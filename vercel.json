@@ -1,5 +1,0 @@
-{
-  "buildCommand": "cd apps/frontend && npm run build",
-  "installCommand": "cd apps/frontend && npm install"
-}
-
