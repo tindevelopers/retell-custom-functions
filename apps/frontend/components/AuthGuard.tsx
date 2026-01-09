@@ -13,6 +13,7 @@ export function AuthGuard({ children, requireAdmin }: Props) {
   const { status, data } = useSession();
   const router = useRouter();
   const pathname = usePathname();
+  const role = (data?.user as any)?.role;
 
   useEffect(() => {
     if (status === "loading") return;
@@ -20,10 +21,10 @@ export function AuthGuard({ children, requireAdmin }: Props) {
       router.replace(`/login?callbackUrl=${encodeURIComponent(pathname || "/")}`);
       return;
     }
-    if (requireAdmin && data?.user?.role !== "super_admin") {
+    if (requireAdmin && role !== "super_admin") {
       router.replace("/");
     }
-  }, [status, data, router, pathname, requireAdmin]);
+  }, [status, role, router, pathname, requireAdmin]);
 
   if (status === "loading") {
     return <div>Loading...</div>;
