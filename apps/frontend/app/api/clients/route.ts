@@ -11,13 +11,11 @@ export async function GET() {
   const role = (session.user as any).role;
   const assignedClients = (session.user as any).assignedClients as string[] | undefined;
 
-  let query = firestore.collection('clients').where('status', '==', 'active');
+  const snapshot = await firestore.collection('clients').where('status', '==', 'active').get();
+  let clients = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
   if (role !== 'super_admin' && assignedClients?.length) {
-    query = query.where('__name__', 'in', assignedClients.slice(0, 10));
+    clients = clients.filter((c) => assignedClients.includes(c.id as string));
   }
-
-  const snapshot = await query.get();
-  const clients = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
   return NextResponse.json({ clients });
 }
 

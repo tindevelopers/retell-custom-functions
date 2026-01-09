@@ -12,13 +12,11 @@ export default async function ClientsPage() {
   const role = (session?.user as any)?.role;
   const assignedClients = ((session?.user as any)?.assignedClients || []) as string[];
 
-  let query = firestore.collection('clients');
+  const snapshot = await firestore.collection('clients').get();
+  let clients = snapshot.docs.map((doc) => ({ id: doc.id, ...(doc.data() as any) }));
   if (role !== 'super_admin' && assignedClients.length) {
-    query = query.where('__name__', 'in', assignedClients.slice(0, 10));
+    clients = clients.filter((c) => assignedClients.includes(c.id));
   }
-
-  const snapshot = await query.get();
-  const clients = snapshot.docs.map((doc) => ({ id: doc.id, ...(doc.data() as any) }));
 
   return (
     <div className="flex flex-col gap-4">

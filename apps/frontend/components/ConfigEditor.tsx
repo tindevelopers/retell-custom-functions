@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 import { ConfigResponse, fetchConfig, saveConfig } from '../lib/api';
 
