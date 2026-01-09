@@ -2,9 +2,9 @@
 
 import { signIn, useSession } from "next-auth/react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 
-export default function LoginPage() {
+function LoginContent() {
   const { status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -30,6 +30,14 @@ export default function LoginPage() {
         Sign in with Google
       </button>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="max-w-md mx-auto bg-white shadow-sm rounded-lg p-8 mt-12">Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }
 
