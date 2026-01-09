@@ -2,8 +2,11 @@ import { ProjectConfig } from './types';
 
 export type ConfigResponse = { config: ProjectConfig; generation: string };
 
-export async function fetchConfig(projectId: string): Promise<ConfigResponse> {
+export async function fetchConfig(projectId: string): Promise<ConfigResponse | null> {
   const res = await fetch(`/api/config/${projectId}`, { cache: 'no-store' });
+  if (res.status === 404) {
+    return null; // Config doesn't exist yet
+  }
   if (!res.ok) {
     throw new Error(`Failed to load config (${res.status})`);
   }

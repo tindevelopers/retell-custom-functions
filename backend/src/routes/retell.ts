@@ -16,10 +16,11 @@ export const retellRouter = new Hono();
 
 retellRouter.post('/transfer', async (c) => {
   // optional shared secret
-  const shared = env.RETELL_SHARED_SECRET;
+  const shared = env.RETELL_SHARED_SECRET?.trim();
   if (shared) {
     const auth = c.req.header('authorization') || '';
-    if (auth !== `Bearer ${shared}`) {
+    const expectedAuth = `Bearer ${shared}`;
+    if (auth !== expectedAuth) {
       return c.json({ error: true, message: 'Unauthorized' }, 401);
     }
   }

@@ -1,0 +1,40 @@
+{
+  "project_id": "agent_0f5125f801f3502acfe5e2e0f2",
+  "functions": {
+    "RETELL_TRANSFER_WEEKDAYS": {
+      "enabled": true,
+      "timezone": "America/New_York",
+      "days_of_week": [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday"
+      ],
+      "windows": [
+        {
+          "start": "09:00",
+          "end": "20:50"
+        }
+      ],
+      "transfer_number": "+18563630633",
+      "deny_message": "I really wish I could connect you right now, but our team isn't available at the moment. I can create a support ticket so they can get back to you as soon as possible."
+    },
+    "RETELL_TRANSFER_SATURDAY": {
+      "enabled": true,
+      "timezone": "America/New_York",
+      "days_of_week": [
+        "saturday"
+      ],
+      "windows": [
+        {
+          "start": "09:00",
+          "end": "16:50"
+        }
+      ],
+      "transfer_number": "+18563630633",
+      "deny_message": "I really wish I could connect you right now, but our team isn't available at the moment. I can create a support ticket so they can get back to you as soon as possible."
+    }
+  }
+}
+

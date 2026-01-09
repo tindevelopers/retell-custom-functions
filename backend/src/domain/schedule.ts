@@ -20,12 +20,19 @@ function buildWindow(date: Date, window: TimeWindow, timezone: string) {
   const [startHour, startMinute] = window.start.split(':').map(Number);
   const [endHour, endMinute] = window.end.split(':').map(Number);
 
-  const start = new Date(date);
-  start.setHours(startHour, startMinute, 0, 0);
-  const zonedStart = toZonedTime(start, timezone);
+  // Get the zoned date to extract year/month/day in the target timezone
+  const zoned = toZonedTime(date, timezone);
+  const year = zoned.getFullYear();
+  const month = zoned.getMonth();
+  const day = zoned.getDate();
 
-  const end = new Date(date);
-  end.setHours(endHour, endMinute, 0, 0);
+  // Create start and end times in the target timezone
+  // Use UTC methods to avoid local timezone conversion issues
+  const start = new Date(Date.UTC(year, month, day, startHour, startMinute, 0, 0));
+  const end = new Date(Date.UTC(year, month, day, endHour, endMinute, 0, 0));
+
+  // Convert to zoned time for comparison
+  const zonedStart = toZonedTime(start, timezone);
   const zonedEnd = toZonedTime(end, timezone);
 
   return { zonedStart, zonedEnd };
@@ -33,14 +40,15 @@ function buildWindow(date: Date, window: TimeWindow, timezone: string) {
 
 function isWithinWindow(now: Date, window: TimeWindow, timezone: string) {
   const { zonedStart, zonedEnd } = buildWindow(now, window, timezone);
+  const zonedNow = toZonedTime(now, timezone);
 
   // Normal window (start < end)
   if (isBefore(zonedStart, zonedEnd) || zonedStart.getTime() === zonedEnd.getTime()) {
-    return isAfter(now, zonedStart) && isBefore(now, zonedEnd);
+    return (isAfter(zonedNow, zonedStart) || zonedNow.getTime() === zonedStart.getTime()) && isBefore(zonedNow, zonedEnd);
   }
 
   // Overnight window (e.g., 22:00-02:00)
-  return isAfter(now, zonedStart) || isBefore(now, zonedEnd);
+  return isAfter(zonedNow, zonedStart) || isBefore(zonedNow, zonedEnd);
 }
 
 export function evaluateSchedule(config: FunctionConfig, nowUtc: Date = new Date()): ScheduleCheckResult {
