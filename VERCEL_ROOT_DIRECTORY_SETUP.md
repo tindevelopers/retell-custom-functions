@@ -64,3 +64,4 @@ Once the root directory is updated:
 
 2. The build should now work correctly from the `apps/frontend` directory.
 
+

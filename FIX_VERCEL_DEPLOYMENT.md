@@ -56,3 +56,4 @@ After updating, check the build logs. You should see:
 ❌ Build Command: Needs to remove `cd apps/frontend` prefix  
 ✅ Output Directory: `.next` (should be auto-detected)
 
+

@@ -38,3 +38,4 @@ echo "  echo 'YOUR_CLIENT_ID' | npx vercel env add GOOGLE_CLIENT_ID production p
 echo "  echo 'YOUR_CLIENT_SECRET' | npx vercel env add GOOGLE_CLIENT_SECRET production preview development"
 echo ""
 
+
