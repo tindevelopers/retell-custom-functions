@@ -1,0 +1,26 @@
+{
+  "type": "object",
+  "required": [
+    "call_id",
+    "project_id",
+    "function_id"
+  ],
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "const": "org_P5F0bnCrRcdlNtZk",
+      "description": "The project organization ID - must be exactly 'org_P5F0bnCrRcdlNtZk'"
+    },
+    "function_id": {
+      "type": "string",
+      "enum": ["RETELL_TRANSFER_WEEKDAYS", "RETELL_TRANSFER_SATURDAY"],
+      "description": "The function identifier - must be either 'RETELL_TRANSFER_WEEKDAYS' or 'RETELL_TRANSFER_SATURDAY'"
+    },
+    "call_id": {
+      "type": "string",
+      "pattern": "^call_[a-zA-Z0-9]+$",
+      "description": "The Retell call ID - must be a valid call ID starting with 'call_'. DO NOT use 'unknown' or any placeholder value. Use Retell's call ID variable (e.g., {{call.call_id}} or {{call_id}} depending on your Retell version)."
+    }
+  },
+  "additionalProperties": false
+}

@@ -70,11 +70,23 @@ Retell should send a POST request with the following JSON structure:
 
 ### Step 4: Set Request Payload
 Configure Retell to send:
-- `call_id`: Use Retell's call ID variable
+- `call_id`: **IMPORTANT** - Use Retell's call ID variable. Common variable names:
+  - `{{call.call_id}}` or `{{call_id}}` or `{{context.call_id}}`
+  - **DO NOT** use the literal string "unknown" - this will cause transfer failures
+  - If unsure, check Retell's documentation for the correct variable name for call ID in custom functions
 - `project_id`: `org_P5F0bnCrRcdlNtZk` (fixed value)
 - `function_id`: Choose one:
   - `RETELL_TRANSFER_WEEKDAYS` for weekday calls
   - `RETELL_TRANSFER_SATURDAY` for Saturday calls
+
+**Example JSON payload configuration:**
+```json
+{
+  "call_id": "{{call.call_id}}",
+  "project_id": "org_P5F0bnCrRcdlNtZk",
+  "function_id": "RETELL_TRANSFER_WEEKDAYS"
+}
+```
 
 ### Step 5: Configure Authentication (if supported)
 If Retell supports custom headers:
@@ -179,6 +191,30 @@ curl -X POST "https://out-of-office-transfer-880489367524.us-central1.run.app/re
 
 ### Issue: Transfer always denied
 **Solution**: Check current time and day against the configured business hours.
+
+### Issue: Transfer fails with "Cannot POST /v2/calls/unknown/transfer"
+**Error Message**: `{"transfer_allowed":true,"transfer_attempted":true,"message":"Cannot POST /v2/calls/unknown/transfer","error":true}`
+
+**Root Cause**: Retell is sending `"call_id":"unknown"` as a literal string instead of the actual call ID.
+
+**Solution**: 
+1. Go to your Retell agent's Custom Function configuration
+2. Check the request payload configuration for the `call_id` field
+3. Ensure you're using a Retell variable, not the literal string "unknown"
+4. Common correct variable formats:
+   - `{{call.call_id}}`
+   - `{{call_id}}`
+   - `{{context.call_id}}`
+   - Check Retell's documentation for the exact variable name in your version
+5. The payload should look like:
+   ```json
+   {
+     "call_id": "{{call.call_id}}",
+     "project_id": "org_P5F0bnCrRcdlNtZk",
+     "function_id": "RETELL_TRANSFER_WEEKDAYS"
+   }
+   ```
+6. After updating, test with a new call to verify the call_id is being sent correctly
 
 ---
 

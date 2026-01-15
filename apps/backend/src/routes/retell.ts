@@ -18,9 +18,12 @@ retellRouter.post('/transfer', async (c) => {
   // Log incoming request for verification
   const timestamp = new Date().toISOString();
   
-  // #region agent log
-  console.log(JSON.stringify({location:'retell.ts:17',message:'transfer endpoint entry',data:{timestamp},timestamp:Date.now(),sessionId:'debug-session',runId:'cloud-run',hypothesisId:'A'}));
-  // #endregion
+  // Log all headers for debugging (especially to find call_id if sent in headers)
+  const headers: Record<string, string> = {};
+  c.req.raw.headers.forEach((value, key) => {
+    headers[key] = value;
+  });
+  console.log(`[${timestamp}] Request headers:`, JSON.stringify(headers));
   
   // Capture raw request body before parsing (for Cloud Run logging)
   let rawBody = '';
@@ -31,10 +34,6 @@ retellRouter.post('/transfer', async (c) => {
     console.log(`[${timestamp}] Retell transfer request received`);
     console.log(`[${timestamp}] Raw request body:`, rawBody);
     
-    // #region agent log
-    console.log(JSON.stringify({location:'retell.ts:28',message:'raw body received',data:{rawBody:rawBody?.substring(0,200),rawBodyLength:rawBody?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'cloud-run',hypothesisId:'A'}));
-    // #endregion
-    
     if (rawBody) {
       body = JSON.parse(rawBody) as Partial<RetellRequest>;
     }
@@ -44,9 +43,20 @@ retellRouter.post('/transfer', async (c) => {
     return c.json({ error: true, message: 'Invalid JSON body' }, 400);
   }
   
-  // #region agent log
-  console.log(JSON.stringify({location:'retell.ts:33',message:'after JSON parse',data:{call_id:body.call_id,project_id:body.project_id,function_id:body.function_id,bodyType:typeof body.call_id},timestamp:Date.now(),sessionId:'debug-session',runId:'cloud-run',hypothesisId:'A'}));
-  // #endregion
+  // Try to get call_id from headers if not in body (Retell may send it in headers)
+  const callIdFromHeader = 
+    c.req.header('x-retell-call-id') || 
+    c.req.header('x-call-id') || 
+    c.req.header('call-id') ||
+    headers['x-retell-call-id'] ||
+    headers['x-call-id'] ||
+    headers['call-id'];
+  
+  // Use call_id from header if body doesn't have it or if body has "unknown"
+  if (callIdFromHeader && (!body.call_id || body.call_id === 'unknown')) {
+    console.log(`[${timestamp}] Using call_id from header: ${callIdFromHeader}`);
+    body.call_id = callIdFromHeader;
+  }
   
   console.log(`[${timestamp}] Parsed request body:`, JSON.stringify({ call_id: body.call_id, project_id: body.project_id, function_id: body.function_id }));
 
@@ -61,16 +71,18 @@ retellRouter.post('/transfer', async (c) => {
     }
   }
   
-  // #region agent log
-  console.log(JSON.stringify({location:'retell.ts:52',message:'before validation check',data:{call_id:body.call_id,hasCallId:!!body.call_id,callIdType:typeof body.call_id,project_id:body.project_id,function_id:body.function_id},timestamp:Date.now(),sessionId:'debug-session',runId:'cloud-run',hypothesisId:'B'}));
-  // #endregion
-  
   if (!body.call_id || !body.project_id || !body.function_id) {
     console.log(`[${timestamp}] Missing required fields. Received:`, JSON.stringify(body));
-    // #region agent log
-    console.log(JSON.stringify({location:'retell.ts:54',message:'validation failed - missing fields',data:{call_id:body.call_id,project_id:body.project_id,function_id:body.function_id},timestamp:Date.now(),sessionId:'debug-session',runId:'cloud-run',hypothesisId:'B'}));
-    // #endregion
     return c.json({ error: true, message: 'Missing required fields' }, 400);
+  }
+  
+  // Validate call_id is not "unknown" or empty
+  if (body.call_id === 'unknown' || body.call_id.trim() === '') {
+    console.log(`[${timestamp}] Invalid call_id: "${body.call_id}". Retell configuration may be incorrect.`);
+    return c.json({ 
+      error: true, 
+      message: 'Invalid call_id: Retell is sending "unknown" as call_id. Please check Retell custom function configuration to ensure the call_id variable is properly set.' 
+    }, 400);
   }
 
   let project;
@@ -108,20 +120,7 @@ retellRouter.post('/transfer', async (c) => {
 
   const idempotencyKey = `${body.call_id}:${body.function_id}`;
   console.log(`[${timestamp}] Attempting transfer for call ${body.call_id} to ${fnConfig.transfer_number}`);
-  
-  // #region agent log
-  console.log(JSON.stringify({location:'retell.ts:92',message:'before transferCall invocation',data:{call_id:body.call_id,callIdValue:String(body.call_id),callIdType:typeof body.call_id,transferNumber:fnConfig.transfer_number,idempotencyKey},timestamp:Date.now(),sessionId:'debug-session',runId:'cloud-run',hypothesisId:'B'}));
-  // #endregion
-  
   const transfer = await transferCall(body.call_id, fnConfig.transfer_number, idempotencyKey);
-  
-  // #region agent log
-  if (transfer.ok) {
-    console.log(JSON.stringify({location:'retell.ts:118',message:'after transferCall returns - success',data:{transferOk:true},timestamp:Date.now(),sessionId:'debug-session',runId:'cloud-run',hypothesisId:'C'}));
-  } else {
-    console.log(JSON.stringify({location:'retell.ts:120',message:'after transferCall returns - failure',data:{transferOk:false,transferMessage:transfer.message,transferStatus:transfer.status},timestamp:Date.now(),sessionId:'debug-session',runId:'cloud-run',hypothesisId:'C'}));
-  }
-  // #endregion
   if (!transfer.ok) {
     console.log(`[${timestamp}] Transfer failed: ${transfer.message}`);
     return c.json(

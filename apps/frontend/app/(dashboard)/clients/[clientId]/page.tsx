@@ -8,6 +8,56 @@ type Props = {
   params: { clientId: string };
 };
 
+async function getFunctionsFromConfig(projectId: string) {
+  const backendBase = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const adminSecret = process.env.ADMIN_SHARED_SECRET;
+  
+  if (!backendBase || !adminSecret) {
+    return [];
+  }
+
+  try {
+    const url = `${backendBase.replace(/\/$/, '')}/admin/projects/${projectId}/config`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${adminSecret.trim()}` },
+      cache: 'no-store',
+    });
+    
+    if (res.status === 404) {
+      return [];
+    }
+    
+    if (!res.ok) {
+      console.error('Failed to fetch config:', res.status);
+      return [];
+    }
+    
+    const data = await res.json();
+    const config = data.config;
+    
+    if (!config?.functions) {
+      return [];
+    }
+    
+    // Convert function config to display format
+    return Object.entries(config.functions).map(([id, fn]: [string, any]) => {
+      const days = Array.isArray(fn.days_of_week) ? fn.days_of_week.join(', ') : '';
+      const windows = Array.isArray(fn.windows) 
+        ? fn.windows.map((w: any) => `${w.start}-${w.end}`).join(', ')
+        : '';
+      
+      return {
+        id,
+        name: id.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
+        description: `${days ? `Days: ${days}` : ''}${windows ? ` | Hours: ${windows}` : ''}`.trim() || 'Custom function configuration',
+      };
+    });
+  } catch (error) {
+    console.error('Error fetching functions from config:', error);
+    return [];
+  }
+}
+
 export default async function ClientDetailPage({ params }: Props) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) redirect('/login');
@@ -23,19 +73,10 @@ export default async function ClientDetailPage({ params }: Props) {
     return <div className="card">Client not found</div>;
   }
   const data = doc.data() as any;
+  const projectId = data.retellWorkspaceId || 'default';
 
-  const functions = [
-    {
-      id: 'RETELL_TRANSFER_WEEKDAYS',
-      name: 'Transfer - Weekdays',
-      description: 'Call transfer during weekday hours',
-    },
-    {
-      id: 'RETELL_TRANSFER_SATURDAY',
-      name: 'Transfer - Saturday',
-      description: 'Call transfer during Saturday hours',
-    },
-  ];
+  // Dynamically fetch functions from config
+  const functions = await getFunctionsFromConfig(projectId);
 
   return (
     <div className="flex flex-col gap-4">

@@ -35,7 +35,12 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="max-w-md mx-auto bg-white shadow-sm rounded-lg p-8 mt-12">Loading...</div>}>
+    <Suspense fallback={
+      <div className="max-w-md mx-auto bg-white shadow-sm rounded-lg p-8 mt-12">
+        <h1 className="text-2xl font-semibold mb-2">Sign in</h1>
+        <p className="text-sm text-gray-600 mb-6">Loading...</p>
+      </div>
+    }>
       <LoginContent />
     </Suspense>
   );
