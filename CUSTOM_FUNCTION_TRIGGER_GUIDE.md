@@ -1,4 +1,4 @@
-# Custom Function Trigger Guide
+# Custom Function Trigger Guide (Updated)
 
 ## Answer: No, Not Every Call Automatically Triggers the Function
 
