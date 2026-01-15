@@ -1,4 +1,4 @@
-# Frontend Deployment Guide
+# Frontend Deployment Guide (Updated)
 
 ## Overview
 The frontend is a Next.js application that should be deployed to Vercel.
