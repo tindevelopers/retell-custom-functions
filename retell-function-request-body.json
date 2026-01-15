@@ -1,0 +1,5 @@
+{
+  "call_id": "{{call.call_id}}",
+  "project_id": "org_P5F0bnCrRcdlNtZk",
+  "function_id": "RETELL_TRANSFER_WEEKDAYS"
+}

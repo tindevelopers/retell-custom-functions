@@ -18,6 +18,13 @@ retellRouter.post('/transfer', async (c) => {
   // Log incoming request for verification
   const timestamp = new Date().toISOString();
   
+  // Log all headers for debugging (especially to find call_id if sent in headers)
+  const headers: Record<string, string> = {};
+  c.req.raw.headers.forEach((value, key) => {
+    headers[key] = value;
+  });
+  console.log(`[${timestamp}] Request headers:`, JSON.stringify(headers));
+  
   // Capture raw request body before parsing (for Cloud Run logging)
   let rawBody = '';
   let body: Partial<RetellRequest> = {};
@@ -36,6 +43,21 @@ retellRouter.post('/transfer', async (c) => {
     return c.json({ error: true, message: 'Invalid JSON body' }, 400);
   }
   
+  // Try to get call_id from headers if not in body (Retell may send it in headers)
+  const callIdFromHeader = 
+    c.req.header('x-retell-call-id') || 
+    c.req.header('x-call-id') || 
+    c.req.header('call-id') ||
+    headers['x-retell-call-id'] ||
+    headers['x-call-id'] ||
+    headers['call-id'];
+  
+  // Use call_id from header if body doesn't have it or if body has "unknown"
+  if (callIdFromHeader && (!body.call_id || body.call_id === 'unknown')) {
+    console.log(`[${timestamp}] Using call_id from header: ${callIdFromHeader}`);
+    body.call_id = callIdFromHeader;
+  }
+  
   console.log(`[${timestamp}] Parsed request body:`, JSON.stringify({ call_id: body.call_id, project_id: body.project_id, function_id: body.function_id }));
 
   // optional shared secret
@@ -52,6 +74,15 @@ retellRouter.post('/transfer', async (c) => {
   if (!body.call_id || !body.project_id || !body.function_id) {
     console.log(`[${timestamp}] Missing required fields. Received:`, JSON.stringify(body));
     return c.json({ error: true, message: 'Missing required fields' }, 400);
+  }
+  
+  // Validate call_id is not "unknown" or empty
+  if (body.call_id === 'unknown' || body.call_id.trim() === '') {
+    console.log(`[${timestamp}] Invalid call_id: "${body.call_id}". Retell configuration may be incorrect.`);
+    return c.json({ 
+      error: true, 
+      message: 'Invalid call_id: Retell is sending "unknown" as call_id. Please check Retell custom function configuration to ensure the call_id variable is properly set.' 
+    }, 400);
   }
 
   let project;
